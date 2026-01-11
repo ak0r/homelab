@@ -13,12 +13,12 @@ services:
     environment:
       - TZ=${TZ}
     volumes:
-      - ../../../data/adguard/work:/opt/adguardhome/work
-      - ../../../data/adguard/conf:/opt/adguardhome/conf
+      - ${APP_DATA_ROOT}/adguard/work:/opt/adguardhome/work
+      - ${APP_DATA_ROOT}/adguard/conf:/opt/adguardhome/conf
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.adguard.entrypoints=https"
-      - "traefik.http.routers.adguard.rule=Host(`${ADGUARD_DASHBOARD_DOMAIN}`)"
+      - "traefik.http.routers.adguard.rule=Host(`${ADGUARD_DOMAIN}`)"
       - "traefik.http.routers.adguard.tls=true"
       - "traefik.http.routers.adguard.tls.certresolver=letsencrypt"
       - "traefik.http.services.adguard.loadbalancer.server.port=3000"

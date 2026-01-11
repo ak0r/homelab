@@ -1,0 +1,31 @@
+# Cloud Plane - Oracle VPS
+# Services: Traefik, Tailscale, AdGuard, Uptime Kuma
+
+name: ${GLOBAL_PROJECT_NAME}-cloud
+
+include:
+  # Core infrastructure
+  - path: services/cloud/tailscale/compose.yml
+    env_file:
+      - env/global.env
+      - env/.env.cloud
+    project_directory: .
+
+  - path: services/cloud/traefik/compose.yml
+    env_file:
+      - env/global.env
+      - env/.env.cloud
+    project_directory: .
+
+  - path: services/cloud/adguard/compose.yml
+    env_file:
+      - env/global.env
+      - env/.env.cloud
+    project_directory: .
+
+  # Monitoring
+  # - path: services/cloud/uptime-kuma/compose.yml
+  #   env_file:
+  #     - env/global.env
+  #     - env/.env.cloud
+  #   project_directory: .

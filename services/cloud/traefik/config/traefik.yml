@@ -1,0 +1,44 @@
+cat > cloud/traefik/config/traefik.yml << 'EOF'
+api:
+  dashboard: true
+  insecure: false
+
+entryPoints:
+  http:
+    address: ":80"
+    http:
+      redirections:
+        entryPoint:
+          to: https
+          scheme: https
+          permanent: true
+  https:
+    address: ":443"
+    http:
+      tls:
+        certResolver: letsencrypt
+
+certificatesResolvers:
+  letsencrypt:
+    acme:
+      email: ${ACME_EMAIL}
+      storage: /certs/acme.json
+      httpChallenge:
+        entryPoint: http
+
+providers:
+  docker:
+    endpoint: "unix:///var/run/docker.sock"
+    exposedByDefault: false
+    network: edge
+  file:
+    directory: /config/dynamic
+    watch: true
+
+log:
+  level: INFO
+  filePath: /logs/traefik.log
+
+accessLog:
+  filePath: /logs/access.log
+EOF

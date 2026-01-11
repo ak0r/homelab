@@ -1,31 +1,24 @@
-# Logs
-*.log
-*.logs
+# Environment files with secrets
+env/.env.cloud
+env/.env.home
+.env
+*.local
 
-# Dependencies
-node_modules/
-/.pnp
-.pnp.js
+# Data directories
+data/
+logs/
 
-# Testing
-/coverage
+# Backup files
+*.bak
+*.backup
+*~
 
-# Production
-/build
-/dist
-
-# Misc
+# OS files
 .DS_Store
-*.env
-.env.local
-.env.*.local
+Thumbs.db
 
 # IDE
 .vscode/
 .idea/
 *.swp
 *.swo
-*~
-
-# OS
-Thumbs.db

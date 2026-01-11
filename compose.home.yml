@@ -1,0 +1,24 @@
+# Home Plane - Home Lab
+# Services: Traefik (optional), Tailscale, Nextcloud, Immich
+
+name: ${GLOBAL_PROJECT_NAME}-home
+
+include:
+  - path: services/home/tailscale/compose.yml
+    env_file:
+      - env/global.env
+      - env/.env.home
+    project_directory: .
+
+  # Home services will be added later
+  # - path: home/nextcloud/compose.yml
+  #   env_file:
+  #     - env/global.env
+  #     - env/.env.home
+  #   project_directory: .
+  
+  # - path: home/immich/compose.yml
+  #   env_file:
+  #     - env/global.env
+  #     - env/.env.home
+  #   project_directory: .
