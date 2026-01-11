@@ -1,4 +1,4 @@
-.PHONY: help init networks cloud-up cloud-down logs ps clean
+.PHONY: help init networks cloud-up cloud-down logs ps clean fix-permissions
 
 # Colors
 BLUE := \033[0;34m
@@ -23,11 +23,18 @@ init: ## Initialize directory structure
 	@mkdir -p logs/adguard
 	@mkdir -p secrets/traefik
 	@mkdir -p secrets/adguard
-	@chown -R $(shell id -u):$(shell id -g) data logs secrets
-	@chmod 700 data/traefik/certs
 	@touch data/traefik/certs/acme.json
+	@touch data/traefik/config/dynamic/.gitkeep
+	@chmod 700 data/traefik/certs
 	@chmod 600 data/traefik/certs/acme.json
-	@echo "$(GREEN)✓ Directory structure created with correct permissions$(NC)"
+	@echo "$(GREEN)✓ Directory structure created$(NC)"
+
+fix-permissions: ## Fix ownership of all data directories
+	@echo "$(BLUE)Fixing permissions...$(NC)"
+	@sudo chown -R $(shell id -u):$(shell id -g) data logs secrets 2>/dev/null || chown -R $(shell id -u):$(shell id -g) data logs secrets
+	@chmod 700 data/traefik/certs
+	@chmod 600 data/traefik/certs/acme.json 2>/dev/null || true
+	@echo "$(GREEN)✓ Permissions fixed$(NC)"
 
 networks: ## Create Docker networks
 	@echo "$(BLUE)Creating Docker networks...$(NC)"
@@ -43,7 +50,7 @@ networks: ## Create Docker networks
 		--opt com.docker.network.bridge.name=br-service
 	@echo "$(GREEN)✓ Networks created$(NC)"
 
-cloud-up: networks init ## Start all cloud services
+cloud-up: networks init fix-permissions ## Start all cloud services
 	@echo "$(BLUE)Starting cloud services...$(NC)"
 	@cd services/cloud/tailscale && docker compose --env-file ../../../global.env --env-file ../../../cloud.env up -d
 	@sleep 5
@@ -58,9 +65,9 @@ cloud-up: networks init ## Start all cloud services
 
 cloud-down: ## Stop all cloud services
 	@echo "$(BLUE)Stopping cloud services...$(NC)"
-	@cd services/cloud/adguard && docker compose down
-	@cd services/cloud/traefik && docker compose down
-	@cd services/cloud/tailscale && docker compose down
+	@cd services/cloud/adguard && docker compose down || true
+	@cd services/cloud/traefik && docker compose down || true
+	@cd services/cloud/tailscale && docker compose down || true
 	@echo "$(GREEN)✓ Cloud services stopped$(NC)"
 
 logs: ## Show all logs
@@ -78,7 +85,7 @@ tailscale-status: ## Check Tailscale status
 ps: ## Show running containers
 	@docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
 
-restart: cloud-down cloud-up ## Restart all cloud services
+restart: cloud-down fix-permissions cloud-up ## Restart all cloud services
 
 clean: ## Clean up everything (DANGEROUS)
 	@echo "$(RED)⚠ This will remove all containers and networks$(NC)"
