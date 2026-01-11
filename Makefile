@@ -14,11 +14,20 @@ help: ## Show this help
 
 init: ## Initialize directory structure
 	@echo "$(BLUE)Creating directory structure...$(NC)"
-	@mkdir -p data/{traefik/{config/dynamic,certs},adguard/{work,conf},tailscale/state}
-	@mkdir -p logs/{traefik,adguard}
-	@mkdir -p secrets/{traefik,adguard}
-	@chmod 600 data/traefik/certs || true
-	@echo "$(GREEN)✓ Directory structure created$(NC)"
+	@mkdir -p data/traefik/config/dynamic
+	@mkdir -p data/traefik/certs
+	@mkdir -p data/adguard/work
+	@mkdir -p data/adguard/conf
+	@mkdir -p data/tailscale/state
+	@mkdir -p logs/traefik
+	@mkdir -p logs/adguard
+	@mkdir -p secrets/traefik
+	@mkdir -p secrets/adguard
+	@chown -R $(shell id -u):$(shell id -g) data logs secrets
+	@chmod 700 data/traefik/certs
+	@touch data/traefik/certs/acme.json
+	@chmod 600 data/traefik/certs/acme.json
+	@echo "$(GREEN)✓ Directory structure created with correct permissions$(NC)"
 
 networks: ## Create Docker networks
 	@echo "$(BLUE)Creating Docker networks...$(NC)"
