@@ -30,7 +30,13 @@ services:
       - "traefik.http.routers.traefik-dashboard.service=api@internal"
       - "traefik.http.routers.traefik-dashboard.middlewares=traefik-auth"
       - "traefik.http.middlewares.traefik-auth.basicauth.users=${TRAEFIK_BASIC_AUTH}"
-
+    command:
+      - --log.filePath=/var/log/traefik/traefik.log
+      - --log.level=DEBUG
+      - --log.format=json
+      - --accesslog.filePath=/var/log/traefik/access.log
+      - --accesslog.format=json
+      - --certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL}
 networks:
   edge:
     external: true
