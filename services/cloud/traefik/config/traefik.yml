@@ -1,4 +1,3 @@
-cat > cloud/traefik/config/traefik.yml << 'EOF'
 api:
   dashboard: true
   insecure: false

@@ -19,7 +19,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ${APP_SERVICES_ROOT}/traefik/config/traefik.yml:/traefik.yml:ro
       - ${APP_SERVICES_ROOT}/traefik/config:/config:ro
-      - ${APP_SERVICES_ROOT}/traefik/acme:/certs
+      - ${APP_DATA_ROOT}/traefik/acme:/certs
       - ${APP_LOGS_ROOT}/traefik:/logs
     labels:
       - "traefik.enable=true"

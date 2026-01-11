@@ -74,9 +74,8 @@ networks:
 ## ---------- Directory Initialization ----------
 init:
 	@echo "Creating directory structure..."
-	@mkdir -p services/cloud/{traefik/{config/dynamic,acme}}
-	@mkdir -p data/cloud/{tailscale/state,adguard/{work,conf}}
-	@mkdir -p data/home/{traefik/{config/dynamic,acme},tailscale/state,nextcloud,immich}
+	@mkdir -p data/cloud/{traefik/acme,tailscale/state,adguard/{work,conf}}
+	@mkdir -p data/home/{traefik/{acme},tailscale/state,nextcloud,immich}
 	@mkdir -p logs/{cloud,home}/{traefik,adguard}
 	@echo "✓ Directory structure created"
 
@@ -84,12 +83,13 @@ init:
 prepare-cloud:
 	@echo "Preparing cloud data directories..."
 	@set -a; . env/global.env; . env/.env.cloud; set +a; \
-	mkdir -p "$${APP_DATA_ROOT}/tailscale/state" \
+	mkdir -p "$${APP_DATA_ROOT}/traefik/acme" \
+					 "$${APP_DATA_ROOT}/tailscale/state" \
 	         "$${APP_DATA_ROOT}/adguard/"{work,conf} \
 	         "$${APP_LOGS_ROOT}/"{traefik,adguard}; \
-	touch "$${APP_SERVICES_ROOT}/traefik/acme/acme.json"; \
-	chmod 600 "$${APP_SERVICES_ROOT}/traefik/acme/acme.json"; \
-	chown -R $(shell id -u):$(shell id -g) "$${APP_DATA_ROOT}" "$${APP_LOG_ROOT}" 2>/dev/null || true; \
+	touch "$${APP_DATA_ROOT}/traefik/acme/acme.json"; \
+	chmod 600 "$${APP_DATA_ROOT}/traefik/acme/acme.json"; \
+	chown -R $(shell id -u):$(shell id -g) "$${APP_DATA_ROOT}" "$${APP_LOGS_ROOT}" 2>/dev/null || true; \
 	echo "✓ Cloud data directories prepared"
 
 cloud-up: networks prepare-cloud
