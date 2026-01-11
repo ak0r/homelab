@@ -3,7 +3,6 @@ services:
     image: adguard/adguardhome:latest
     container_name: adguard
     restart: unless-stopped
-    user: "${PUID}:${PGID}"
     networks:
       - edge
     ports:
