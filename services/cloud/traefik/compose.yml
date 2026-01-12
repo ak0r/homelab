@@ -1,7 +1,7 @@
 services:
   traefik:
-    image: traefik:latest
-    container_name: traefik
+    image: traefik:${SERVICE_VERSION:-v3.5}
+    container_name: ${SERVICE_NAME:-traefik}
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true
@@ -14,29 +14,72 @@ services:
     environment:
       - TZ=${TZ}
       - ACME_EMAIL=${ACME_EMAIL}
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ${APP_SERVICES_ROOT}/traefik/config/traefik.yml:/traefik.yml:ro
-      - ${APP_SERVICES_ROOT}/traefik/config:/config:ro
-      - ${APP_DATA_ROOT}/traefik/acme:/certs
-      - ${APP_LOGS_ROOT}/traefik:/logs
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.traefik-dashboard.entrypoints=https"
-      - "traefik.http.routers.traefik-dashboard.rule=Host(`${TRAEFIK_DOMAIN}`)"
-      - "traefik.http.routers.traefik-dashboard.tls=true"
-      - "traefik.http.routers.traefik-dashboard.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.traefik-dashboard.service=api@internal"
-      - "traefik.http.routers.traefik-dashboard.middlewares=traefik-auth"
-      - "traefik.http.middlewares.traefik-auth.basicauth.users=${TRAEFIK_BASIC_AUTH}"
+      - ACME_CA_SERVER=${ACME_CA_SERVER}
+      - CLOUDFLARE_EMAIL=${CLOUDFLARE_EMAIL}
+      - CLOUDFLARE_API_TOKEN=${CLOUDFLARE_API_TOKEN}
+      - CLOUDFLARE_ZONE_API_TOKEN=${CLOUDFLARE_ZONE_API_TOKEN}
+      - CLOUDFLARE_DNS_API_TOKEN=${CLOUDFLARE_DNS_API_TOKEN}
     command:
+      # Global
+      - --global.checkNewVersion=false
+      - --global.sendAnonymousUsage=false
+
+      # API & Dashboard
+      - --api.dashboard=true
+      - --api.debug=false
+      - --entrypoints.traefik.address=:8080
+
+      # HTTP → HTTPS redirect
+      - --entrypoints.web.address=:80
+      - --entrypoints.web.http.redirections.entrypoint.to=websecure
+      - --entrypoints.web.http.redirections.entrypoint.scheme=https
+      - --entrypoints.web.http.redirections.entrypoint.permanent=true
+
+      # HTTPS
+      - --entrypoints.websecure.address=:443
+      - --entrypoints.websecure.http.tls.options=default
+
+      # Certificates (Cloudflare DNS challenge)
+      - --certificatesresolvers.cloudflare-dns.acme.email=${ACME_EMAIL}
+      - --certificatesresolvers.cloudflare-dns.acme.storage=/etc/traefik/acme/acme.json
+      - --certificatesresolvers.cloudflare-dns.acme.caserver=${ACME_CA_SERVER}
+      - --certificatesresolvers.cloudflare-dns.acme.keytype=EC256
+      - --certificatesresolvers.cloudflare-dns.acme.dnschallenge.provider=cloudflare
+      - --certificatesresolvers.cloudflare-dns.acme.dnschallenge.resolvers=1.1.1.1:53,8.8.8.8:53
+      - --certificatesresolvers.cloudflare-dns.acme.dnschallenge.delaybeforecheck=90s
+      
+      # Docker provider
+      - --providers.docker.endpoint=unix:///var/run/docker.sock
+      - --providers.docker.exposedByDefault=false
+      - --providers.docker.network=${SERVICE_NETWORK:-service}
+      - --providers.docker.watch=true
+
+      # File provider
+      - --providers.file.directory=/etc/traefik/dynamic
+      - --providers.file.watch=true
+
+      # Logging
       - --log.filePath=/var/log/traefik/traefik.log
-      - --log.level=DEBUG
+      - --log.level=${SERVICE_LOG_LEVEL:-INFO}
       - --log.format=json
       - --accesslog.filePath=/var/log/traefik/access.log
       - --accesslog.format=json
-      - --certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL}
+
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ${SERVICE_CONFIG_PATH}/dynamic:/etc/traefik/dynamic:ro
+      - ${SERVICE_DATA_PATH}/acme/acme.json:/etc/traefik/acme/acme.json
+      - ${SERVICE_LOGS_PATH}:/var/log/traefik
+
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.traefik-dashboard.rule=Host(`${SERVICE_FULL_DOMAIN}`)
+      - traefik.http.routers.traefik-dashboard.service=api@internal
+      - traefik.http.routers.traefik-dashboard.tls=true
+      - traefik.http.routers.traefik-dashboard.tls.certresolver=cloudflare-dns
+      - traefik.http.routers.traefik-dashboard.middlewares=traefik-auth
+      # - traefik.http.middlewares.traefik-auth.basicauth.users=${TRAEFIK_BASIC_AUTH}
+
 networks:
   edge:
     external: true

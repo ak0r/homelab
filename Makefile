@@ -7,8 +7,13 @@ HOME  := -f compose.home.yml
 
 # Env files
 ENV_GLOBAL := --env-file env/global.env
-ENV_CLOUD  := $(ENV_GLOBAL) --env-file env/.env.cloud
-ENV_HOME   := $(ENV_GLOBAL) --env-file env/.env.home
+ENV_CLOUD  := $(ENV_GLOBAL) --env-file env/.cloud.env
+ENV_HOME   := $(ENV_GLOBAL) --env-file env/.home.env
+
+NETWORK_DEFS := \
+  "edge:172.20.0.0/24:172.20.0.1" \
+  "service:172.21.0.0/24:172.21.0.1" \
+
 
 .PHONY: help init networks cloud-up cloud-down home-up home-down \
         validate-cloud validate-home logs-cloud logs-home ps-cloud ps-home \
@@ -45,12 +50,12 @@ help:
 ## ---------- Initial Setup ----------
 setup:
 	@echo "Setting up homelab..."
-	@if [ ! -f env/.env.cloud ]; then \
-		cp env/.env.cloud.example env/.env.cloud; \
-		echo "✓ Created env/.env.cloud from template"; \
-		echo "⚠️  Edit env/.env.cloud and fill in secrets!"; \
+	@if [ ! -f env/.cloud.env ]; then \
+		cp env/.cloud.env.example env/.cloud.env; \
+		echo "✓ Created env/.cloud.env from template"; \
+		echo "⚠️  Edit env/.cloud.env and fill in secrets!"; \
 	else \
-		echo "⚠️  env/.env.cloud already exists, skipping"; \
+		echo "⚠️  env/.cloud.env already exists, skipping"; \
 	fi
 	@$(MAKE) init
 	@$(MAKE) networks
@@ -58,7 +63,7 @@ setup:
 	@echo "✅ Setup complete!"
 	@echo ""
 	@echo "Next steps:"
-	@echo "1. Edit env/.env.cloud and fill in all secrets"
+	@echo "1. Edit env/.cloud.env and fill in all secrets"
 	@echo "2. Run: make prepare-cloud"
 	@echo "3. Run: make cloud-up"
 
