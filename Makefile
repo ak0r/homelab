@@ -87,7 +87,7 @@ init:
 ## ---------- Cloud Plane ----------
 prepare-cloud:
 	@echo "Preparing cloud data directories..."
-	@set -a; . env/global.env; . env/.env.cloud; set +a; \
+	@set -a; . env/global.env; . env/.cloud.env; set +a; \
 	mkdir -p "$${APP_DATA_ROOT}/traefik/acme" \
 					 "$${APP_DATA_ROOT}/tailscale/state" \
 	         "$${APP_DATA_ROOT}/adguard/"{work,conf} \
