@@ -87,7 +87,7 @@ init:
 ## ---------- Cloud Plane ----------
 prepare-cloud:
 	@echo "Preparing cloud data directories..."
-	@set -a; . env/global.env; . env/.cloud.env; set +a; \
+	@set -a; . env/global.env; . env/cloud/.cloud.env; set +a; \
 	mkdir -p "$${APP_DATA_ROOT}/traefik/acme" \
 					 "$${APP_DATA_ROOT}/tailscale/state" \
 	         "$${APP_DATA_ROOT}/adguard/"{work,conf} \
@@ -173,3 +173,52 @@ clean:
 		docker network rm edge service 2>/dev/null || true; \
 		echo "✓ Cleanup complete"; \
 	fi
+
+# --------------------------------------
+# Service orchestration (modular)
+# --------------------------------------
+SERVICE ?=
+SERVICES ?=
+
+.PHONY: check-global check-cloud-service
+check-global:
+	@test -f "$(ENV_GLOBAL)" || (echo "Error: $(ENV_GLOBAL) not found at repo root." && exit 1)
+
+check-cloud-service:
+	@test -n "$(SERVICE)" || (echo "Error: SERVICE not set. Use SERVICE=name" && exit 1)
+	@test -d "services/cloud/$(SERVICE)" || (echo "Error: services/cloud/$(SERVICE) not found." && exit 1)
+	@test -f "services/cloud/$(SERVICE)/compose.yml" || (echo "Error: compose.yml missing in services/cloud/$(SERVICE)" && exit 1)
+	@test -f "env/cloud/.cloud.env" || (echo "Error: .cloud.env missing in env/cloud/" && exit 1)
+	@test -f "env/cloud/.$(SERVICE).env" || (echo "Error: .$(SERVICE).env missing in env/cloud/" && exit 1)
+
+.PHONY: cloud-service-up cloud-service-down cloud-service-logs cloud-service-ps
+cloud-service-up: check-global check-cloud-service networks
+	$(DC) \
+	  --env-file env/global.env \
+	  --env-file env/cloud/.cloud.env \
+	  --env-file env/cloud/.$(SERVICE).env \
+	  -f services/cloud/$(SERVICE)/compose.yml \
+	  up -d
+
+cloud-service-down: check-global check-cloud-service
+	$(DC) \
+	  --env-file env/global.env \
+	  --env-file env/cloud/.cloud.env \
+	  --env-file env/cloud/.$(SERVICE).env \
+	  -f services/cloud/$(SERVICE)/compose.yml \
+	  down
+cloud-service-logs: check-global check-cloud-service
+	$(DC) \
+	  --env-file env/global.env \
+	  --env-file env/cloud/.cloud.env \
+	  --env-file env/cloud/.$(SERVICE).env \
+	  -f services/cloud/$(SERVICE)/compose.yml \
+	  logs -f
+
+cloud-service-ps: check-global check-cloud-service
+	$(DC) \
+	  --env-file env/global.env \
+	  --env-file env/cloud/.cloud.env \
+	  --env-file env/cloud/.$(SERVICE).env \
+	  -f services/cloud/$(SERVICE)/compose.yml \
+	  ps

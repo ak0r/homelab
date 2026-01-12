@@ -1,0 +1,158 @@
+# Root Makefile — networks + modular services
+SHELL := /bin/bash
+COMPOSE := docker compose
+
+# --------------------------------------
+# Global env
+# --------------------------------------
+GLOBAL_ENV := global.env
+
+# --------------------------------------
+# Networks (name:subnet:gateway)
+# Edit subnets/gateways to fit your LAN plan
+# --------------------------------------
+NETWORK_DEFS := \
+  "edge:172.20.1.0/24:172.20.1.1" \
+  "service:172.20.2.0/24:172.20.2.1" \
+  "socket-proxy:172.20.3.0/24:172.20.3.1"
+
+.PHONY: help
+help:
+	@echo "Targets:"
+	@echo "  networks              Create global networks if missing"
+	@echo "  reset-networks        Remove and recreate all global networks"
+	@echo "  list-networks         docker network ls"
+	@echo "  service-up SERVICE=x  Up a single service (passes global.env + service.env)"
+	@echo "  service-down SERVICE=x"
+	@echo "  service-logs SERVICE=x"
+	@echo "  service-ps SERVICE=x"
+	@echo "  stack-up SERVICES=\"a b\"  Up multiple services (loops service-up)"
+	@echo "  stack-down SERVICES=\"a b\""
+	@echo "  stack-logs SERVICES=\"a b\""
+
+# --------------------------------------
+# Network management
+# --------------------------------------
+.PHONY: networks reset-networks list-networks
+networks:
+	@for def in $(NETWORK_DEFS); do \
+	  name=$${def%%:*}; \
+	  rest=$${def#*:}; \
+	  subnet=$${rest%%:*}; \
+	  gateway=$${rest#*:}; \
+	  if ! docker network inspect $$name >/dev/null 2>&1; then \
+	    echo "Creating network: $$name (subnet $$subnet gw $$gateway)"; \
+	    docker network create --driver=bridge --subnet=$$subnet --gateway=$$gateway $$name; \
+	  else \
+	    echo "Network $$name already exists, skipping."; \
+	  fi; \
+	done
+
+reset-networks:
+	@for def in $(NETWORK_DEFS); do \
+	  name=$${def%%:*}; \
+	  if docker network inspect $$name >/dev/null 2>&1; then \
+	    echo "Removing network: $$name"; docker network rm $$name; \
+	  fi; \
+	done
+	$(MAKE) networks
+
+list-networks:
+	docker network ls
+
+# --------------------------------------
+# Service orchestration (modular)
+# --------------------------------------
+SERVICE ?=
+SERVICES ?=
+
+.PHONY: check-global check-service
+check-global:
+	@test -f "$(GLOBAL_ENV)" || (echo "Error: $(GLOBAL_ENV) not found at repo root." && exit 1)
+
+check-service:
+	@test -n "$(SERVICE)" || (echo "Error: SERVICE not set. Use SERVICE=name" && exit 1)
+	@test -d "services/$(SERVICE)" || (echo "Error: services/$(SERVICE) not found." && exit 1)
+	@test -f "services/$(SERVICE)/compose.yml" || (echo "Error: compose.yml missing in services/$(SERVICE)" && exit 1)
+	@test -f "services/$(SERVICE)/$(SERVICE).env" || (echo "Error: $(SERVICE).env missing in services/$(SERVICE)" && exit 1)
+
+.PHONY: service-up service-down service-logs service-ps
+service-up: check-global check-service networks
+	$(COMPOSE) \
+	  --env-file $(GLOBAL_ENV) \
+	  --env-file services/$(SERVICE)/$(SERVICE).env \
+	  -f services/$(SERVICE)/compose.yml \
+	  up -d
+
+service-down: check-global check-service
+	$(COMPOSE) \
+	  --env-file $(GLOBAL_ENV) \
+	  --env-file services/$(SERVICE)/$(SERVICE).env \
+	  -f services/$(SERVICE)/compose.yml \
+	  down
+
+service-logs: check-global check-service
+	$(COMPOSE) \
+	  --env-file $(GLOBAL_ENV) \
+	  --env-file services/$(SERVICE)/$(SERVICE).env \
+	  -f services/$(SERVICE)/compose.yml \
+	  logs -f
+
+service-ps: check-global check-service
+	$(COMPOSE) \
+	  --env-file $(GLOBAL_ENV) \
+	  --env-file services/$(SERVICE)/$(SERVICE).env \
+	  -f services/$(SERVICE)/compose.yml \
+	  ps
+
+# --------------------------------------
+# Multi-service stack helpers (looped per service)
+# --------------------------------------
+.PHONY: stack-up stack-down stack-logs
+stack-up: check-global networks
+	@test -n "$(SERVICES)" || (echo "Error: SERVICES not set. Example: make stack-up SERVICES=\"traefik komodo\"" && exit 1)
+	@for s in $(SERVICES); do \
+	  $(MAKE) --no-print-directory service-up SERVICE=$$s || exit $$?; \
+	done
+
+stack-down: check-global
+	@test -n "$(SERVICES)" || (echo "Error: SERVICES not set. Example: make stack-down SERVICES=\"traefik komodo\"" && exit 1)
+	@for s in $(SERVICES); do \
+	  $(MAKE) --no-print-directory service-down SERVICE=$$s || exit $$?; \
+	done
+
+stack-logs: check-global
+	@test -n "$(SERVICES)" || (echo "Error: SERVICES not set. Example: make stack-logs SERVICES=\"traefik komodo\"" && exit 1)
+	@for s in $(SERVICES); do \
+	  echo "---- $$s ----"; \
+	  $(MAKE) --no-print-directory service-logs SERVICE=$$s || exit $$?; \
+	done
+
+# --------------------------------------
+# Service lifecycle helpers
+# --------------------------------------
+
+# Optional UID/GID for permissions (default: 1000)
+PUID ?= 1000
+PGID ?= 1000
+SET_PERMS ?= false
+
+.PHONY: service-init service-purge
+
+service-init: check-global
+	@test -n "$(SERVICE)" || (echo "Error: SERVICE not set. Use SERVICE=name" && exit 1)
+	@echo "Initializing service '$(SERVICE)'..."
+	@mkdir -p data/$(SERVICE) logs/$(SERVICE) secrets/$(SERVICE) services/$(SERVICE)
+	@touch services/$(SERVICE)/compose.yml services/$(SERVICE)/$(SERVICE).env
+	@if [ "$(SET_PERMS)" = "true" ]; then \
+	  echo "Applying ownership $(PUID):$(PGID) and permissions..."; \
+	  chown -R $(PUID):$(PGID) data/$(SERVICE) logs/$(SERVICE) secrets/$(SERVICE); \
+	  chmod 750 secrets/$(SERVICE); \
+	fi
+	@echo "Service '$(SERVICE)' initialized."
+
+service-purge:
+	@test -n "$(SERVICE)" || (echo "Error: SERVICE not set. Use SERVICE=name" && exit 1)
+	@echo "Purging service '$(SERVICE)'..."
+	@rm -rf data/$(SERVICE) logs/$(SERVICE) secrets/$(SERVICE) services/$(SERVICE)
+	@echo "Service '$(SERVICE)' directories removed."
