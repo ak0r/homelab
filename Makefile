@@ -6,9 +6,9 @@ CLOUD := -f compose.cloud.yml
 HOME  := -f compose.home.yml
 
 # Env files
-ENV_GLOBAL := --env-file env/global.env
-ENV_CLOUD  := $(ENV_GLOBAL) --env-file env/.cloud.env
-ENV_HOME   := $(ENV_GLOBAL) --env-file env/.home.env
+ENV_GLOBAL := env/global.env
+ENV_CLOUD  := env/cloud/.cloud.env
+ENV_HOME   := env/home/.home.env
 
 NETWORK_DEFS := \
   "edge:172.20.0.0/24:172.20.0.1" \
@@ -194,31 +194,31 @@ check-cloud-service:
 .PHONY: cloud-service-up cloud-service-down cloud-service-logs cloud-service-ps
 cloud-service-up: check-global check-cloud-service networks
 	$(DC) \
-	  --env-file env/global.env \
-	  --env-file env/cloud/.cloud.env \
+	  --env-file ${ENV_GLOBAL} \
+	  --env-file ${ENV_CLOUD} \
 	  --env-file env/cloud/.$(SERVICE).env \
 	  -f services/cloud/$(SERVICE)/compose.yml \
 	  up -d
 
 cloud-service-down: check-global check-cloud-service
 	$(DC) \
-	  --env-file env/global.env \
-	  --env-file env/cloud/.cloud.env \
+	  --env-file ${ENV_GLOBAL} \
+	  --env-file ${ENV_CLOUD} \
 	  --env-file env/cloud/.$(SERVICE).env \
 	  -f services/cloud/$(SERVICE)/compose.yml \
 	  down
 cloud-service-logs: check-global check-cloud-service
 	$(DC) \
-	  --env-file env/global.env \
-	  --env-file env/cloud/.cloud.env \
+	  --env-file ${ENV_GLOBAL} \
+	  --env-file ${ENV_CLOUD} \
 	  --env-file env/cloud/.$(SERVICE).env \
 	  -f services/cloud/$(SERVICE)/compose.yml \
 	  logs -f
 
 cloud-service-ps: check-global check-cloud-service
 	$(DC) \
-	  --env-file env/global.env \
-	  --env-file env/cloud/.cloud.env \
+	  --env-file ${ENV_GLOBAL} \
+	  --env-file ${ENV_CLOUD} \
 	  --env-file env/cloud/.$(SERVICE).env \
 	  -f services/cloud/$(SERVICE)/compose.yml \
 	  ps
