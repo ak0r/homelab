@@ -6,7 +6,6 @@ services:
     restart: unless-stopped
     privileged: true
     network_mode: host
-    user: "${SERVICE_UID:-1001}:${SERVICE_GID:-1001}"
     environment:
       - TS_AUTHKEY=${TAILSCALE_AUTHKEY}
       - TS_STATE_DIR=/var/lib/tailscale
