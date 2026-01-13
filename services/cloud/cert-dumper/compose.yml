@@ -3,16 +3,17 @@ services:
     image: ldez/traefik-certs-dumper:v2.8.3
     container_name: cert-dumper
     restart: unless-stopped
-    network_mode: host
     user: "${SERVICE_UID:-1001}:${SERVICE_GID:-1001}"
+    environment:
+      - TZ=${TZ}
+      - ACME_FILE_PATH=/traefik/acme.json
+    volumes:
+      - ${DATA_ROOT}/cloud/traefik/acme/acme.json:/traefik/acme.json:ro
+      - ${DATA_ROOT}/cloud/certs:/output
     command:
       - file
       - --source=/traefik/acme.json
       - --dest=/output
-      - --domain-subdir=true
-      - --watch
-    volumes:
-      - ${DATA_ROOT}/cloud/traefik/acme:/traefik:ro
-      - ${DATA_ROOT}/cloud/certs:/output
-    environment:
-      - TZ=${TZ}
+      - --domain-subdir
+      - --version=v2
+      - --post-hook=echo 'Certificates dumped'
