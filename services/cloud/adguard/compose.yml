@@ -9,6 +9,7 @@ services:
     volumes:
       - ${SERVICE_DATA_PATH}/work:/opt/adguardhome/work
       - ${SERVICE_DATA_PATH}/conf:/opt/adguardhome/conf
+      - ${DATA_ROOT}/cloud/certs/adguard.cloud.offhourlab.dev:/opt/adguardhome/certs:ro
     labels:
       - traefik.enable=true
       - traefik.http.routers.adguard.rule=Host(`${SERVICE_FULL_DOMAIN}`)

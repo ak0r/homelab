@@ -23,6 +23,11 @@ include:
       - env/cloud/.adguard.env
     project_directory: .
 
+  - path: services/cloud/cert-dumper/compose.yml
+    env_file:
+      - env/global.env
+    project_directory: .
+
   # Monitoring
   # - path: services/cloud/uptime-kuma/compose.yml
   #   env_file:

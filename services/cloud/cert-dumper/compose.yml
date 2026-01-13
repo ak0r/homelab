@@ -1,0 +1,17 @@
+services:
+  cert-dumper:
+    image: ldez/traefik-certs-dumper:v2.8.3
+    container_name: cert-dumper
+    restart: unless-stopped
+    network_mode: host
+    command:
+      - file
+      - --source=/traefik/acme.json
+      - --dest=/output
+      - --domain-subdir=true
+      - --watch
+    volumes:
+      - ${DATA_ROOT}/cloud/traefik/acme:/traefik:ro
+      - ${DATA_ROOT}/cloud/certs:/output
+    environment:
+      - TZ=${TZ}
