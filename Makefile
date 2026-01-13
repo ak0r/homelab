@@ -7,8 +7,6 @@ HOME  := -f compose.home.yml
 
 # Env files
 ENV_GLOBAL := env/global.env
-ENV_CLOUD  := env/cloud/.cloud.env
-ENV_HOME   := env/home/.home.env
 
 NETWORK_DEFS := \
   "edge:172.20.0.0/24:172.20.0.1" \
@@ -87,72 +85,72 @@ init:
 ## ---------- Cloud Plane ----------
 prepare-cloud:
 	@echo "Preparing cloud data directories..."
-	@set -a; . env/global.env; . env/cloud/.cloud.env; set +a; \
-	mkdir -p "$${APP_DATA_ROOT}/traefik/acme" \
-					 "$${APP_DATA_ROOT}/tailscale/state" \
-	         "$${APP_DATA_ROOT}/adguard/"{work,conf} \
-	         "$${APP_LOGS_ROOT}/"{traefik,adguard}; \
-	touch "$${APP_DATA_ROOT}/traefik/acme/acme.json"; \
-	chmod 600 "$${APP_DATA_ROOT}/traefik/acme/acme.json"; \
-	chown -R $(shell id -u):$(shell id -g) "$${APP_DATA_ROOT}" "$${APP_LOGS_ROOT}" 2>/dev/null || true; \
+	@set -a; . env/global.env; set +a; \
+	mkdir -p "$${CLOUD_APP_DATA_ROOT}/traefik/acme" \
+					 "$${CLOUD_APP_DATA_ROOT}/tailscale/state" \
+	         "$${CLOUD_APP_DATA_ROOT}/adguard/"{work,conf} \
+	         "$${CLOUD_APP_LOGS_ROOT}/"{traefik,adguard}; \
+	touch "$${CLOUD_APP_DATA_ROOT}/traefik/acme/acme.json"; \
+	chmod 600 "$${CLOUD_APP_DATA_ROOT}/traefik/acme/acme.json"; \
+	chown -R $(shell id -u):$(shell id -g) "$${CLOUD_APP_DATA_ROOT}" "$${CLOUD_APP_LOGS_ROOT}" 2>/dev/null || true; \
 	echo "✓ Cloud data directories prepared"
 
 cloud-up: networks prepare-cloud
 	@echo "Starting cloud services..."
-	$(DC) $(ENV_CLOUD) $(CLOUD) up -d
+	$(DC) $(CLOUD) up -d
 	@echo "✓ Cloud services started"
 	@echo ""
 	@echo "Access your services:"
 	@echo "  Traefik: https://traefik.cloud.offhourlab.dev"
-	@echo "  AdGuard: https://adguard.cloud.offhourlab.dev"
 
 cloud-down:
 	@echo "Stopping cloud services..."
-	$(DC) $(ENV_CLOUD) $(CLOUD) down
+	$(DC) $(CLOUD) down
 	@echo "✓ Cloud services stopped"
 
 cloud-restart: cloud-down cloud-up
 
 validate-cloud:
 	@echo "Validating cloud compose..."
-	@$(DC) $(ENV_CLOUD) $(CLOUD) config -q && echo "✓ Cloud compose is valid"
+	@$(DC) $(CLOUD) config -q && echo "✓ Cloud compose is valid"
+
 
 logs-cloud:
-	$(DC) $(ENV_CLOUD) $(CLOUD) logs -f
+	$(DC) $(CLOUD) logs -f
 
 ps-cloud:
-	$(DC) $(ENV_CLOUD) $(CLOUD) ps
+	$(DC) $(CLOUD) ps
 
 ## ---------- Home Plane ----------
 prepare-home:
 	@echo "Preparing home data directories..."
-	@set -a; . env/global.env; . env/.env.home; set +a; \
-	mkdir -p "$${APP_DATA_ROOT}/tailscale/state" \
-	         "$${APP_DATA_ROOT}/nextcloud" \
-	         "$${APP_DATA_ROOT}/immich"; \
+	@set -a; . env/global.env; set +a; \
+	mkdir -p "$${HOME_APP_DATA_ROOT}/tailscale/state" \
+	         "$${HOME_APP_DATA_ROOT}/nextcloud" \
+	         "$${HOME_APP_DATA_ROOT}/immich"; \
 	echo "✓ Home data directories prepared"
 
 home-up: networks prepare-home
 	@echo "Starting home services..."
-	$(DC) $(ENV_HOME) $(HOME) up -d
+	$(DC) $(HOME) up -d
 	@echo "✓ Home services started"
 
 home-down:
 	@echo "Stopping home services..."
-	$(DC) $(ENV_HOME) $(HOME) down
+	$(DC) $(HOME) down
 	@echo "✓ Home services stopped"
 
 home-restart: home-down home-up
 
 validate-home:
 	@echo "Validating home compose..."
-	@$(DC) $(ENV_HOME) $(HOME) config -q && echo "✓ Home compose is valid"
+	@$(DC) $(HOME) config -q && echo "✓ Home compose is valid"
 
 logs-home:
-	$(DC) $(ENV_HOME) $(HOME) logs -f
+	$(DC) $(HOME) logs -f
 
 ps-home:
-	$(DC) $(ENV_HOME) $(HOME) ps
+	$(DC) $(HOME) ps
 
 ## ---------- Utilities ----------
 fix-permissions:

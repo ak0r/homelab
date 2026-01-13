@@ -78,7 +78,7 @@ services:
       - traefik.http.routers.traefik-dashboard.tls=true
       - traefik.http.routers.traefik-dashboard.tls.certresolver=cloudflare-dns
       - traefik.http.routers.traefik-dashboard.middlewares=traefik-auth
-      # - traefik.http.middlewares.traefik-auth.basicauth.users=${TRAEFIK_BASIC_AUTH}
+      - traefik.http.middlewares.traefik-auth.basicauth.users=${TRAEFIK_BASIC_AUTH}
 
 networks:
   edge:

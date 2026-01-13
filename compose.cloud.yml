@@ -14,8 +14,8 @@ include:
   - path: services/cloud/traefik/compose.yml
     env_file:
       - env/global.env
-      - env/.cloud.env
-      - env/.traefik-cloud.env
+      # - env/.cloud.env
+      - env/.traefik.env
     project_directory: .
 
   # - path: services/cloud/adguard/compose.yml
