@@ -4,6 +4,7 @@ services:
     container_name: cert-dumper
     restart: unless-stopped
     network_mode: host
+    user: "${SERVICE_UID:-1001}:${SERVICE_GID:-1001}"
     command:
       - file
       - --source=/traefik/acme.json
