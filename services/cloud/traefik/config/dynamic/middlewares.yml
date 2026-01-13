@@ -20,12 +20,6 @@ http:
           - "172.64.0.0/13"
           - "131.0.72.0/22"
 
-    # Basic Auth
-    basic-auth:
-      basicAuth:
-        users:
-          - "admin:$$apr1$$x/WDJG23$$2ypKZp2489m6diTUE360C1" # replace with actual user and hashed password using htpasswd
-
     # Security headers
     security-headers:
       headers:

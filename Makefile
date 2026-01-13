@@ -48,12 +48,12 @@ help:
 ## ---------- Initial Setup ----------
 setup:
 	@echo "Setting up homelab..."
-	@if [ ! -f env/.cloud.env ]; then \
-		cp env/.cloud.env.example env/.cloud.env; \
-		echo "✓ Created env/.cloud.env from template"; \
-		echo "⚠️  Edit env/.cloud.env and fill in secrets!"; \
+	@if [ ! -f env/cloud/.cloud.env ]; then \
+		cp env/cloud/.cloud.env.example env/cloud/.cloud.env; \
+		echo "✓ Created env/cloud/.cloud.env from template"; \
+		echo "⚠️  Edit env/cloud/.cloud.env and fill in secrets!"; \
 	else \
-		echo "⚠️  env/.cloud.env already exists, skipping"; \
+		echo "⚠️  env/cloud/.cloud.env already exists, skipping"; \
 	fi
 	@$(MAKE) init
 	@$(MAKE) networks
@@ -61,7 +61,7 @@ setup:
 	@echo "✅ Setup complete!"
 	@echo ""
 	@echo "Next steps:"
-	@echo "1. Edit env/.cloud.env and fill in all secrets"
+	@echo "1. Edit env/cloud/.cloud.env and fill in all secrets"
 	@echo "2. Run: make prepare-cloud"
 	@echo "3. Run: make cloud-up"
 
@@ -167,52 +167,3 @@ clean:
 		docker network rm edge service 2>/dev/null || true; \
 		echo "✓ Cleanup complete"; \
 	fi
-
-# --------------------------------------
-# Service orchestration (modular)
-# --------------------------------------
-SERVICE ?=
-SERVICES ?=
-
-.PHONY: check-global check-cloud-service
-check-global:
-	@test -f "$(ENV_GLOBAL)" || (echo "Error: $(ENV_GLOBAL) not found at repo root." && exit 1)
-
-check-cloud-service:
-	@test -n "$(SERVICE)" || (echo "Error: SERVICE not set. Use SERVICE=name" && exit 1)
-	@test -d "services/cloud/$(SERVICE)" || (echo "Error: services/cloud/$(SERVICE) not found." && exit 1)
-	@test -f "services/cloud/$(SERVICE)/compose.yml" || (echo "Error: compose.yml missing in services/cloud/$(SERVICE)" && exit 1)
-	@test -f "env/cloud/.cloud.env" || (echo "Error: .cloud.env missing in env/cloud/" && exit 1)
-	@test -f "env/cloud/.$(SERVICE).env" || (echo "Error: .$(SERVICE).env missing in env/cloud/" && exit 1)
-
-.PHONY: cloud-service-up cloud-service-down cloud-service-logs cloud-service-ps
-cloud-service-up: check-global check-cloud-service networks
-	$(DC) \
-	  --env-file ${ENV_GLOBAL} \
-	  --env-file ${ENV_CLOUD} \
-	  --env-file env/cloud/.$(SERVICE).env \
-	  -f services/cloud/$(SERVICE)/compose.yml \
-	  up -d
-
-cloud-service-down: check-global check-cloud-service
-	$(DC) \
-	  --env-file ${ENV_GLOBAL} \
-	  --env-file ${ENV_CLOUD} \
-	  --env-file env/cloud/.$(SERVICE).env \
-	  -f services/cloud/$(SERVICE)/compose.yml \
-	  down
-cloud-service-logs: check-global check-cloud-service
-	$(DC) \
-	  --env-file ${ENV_GLOBAL} \
-	  --env-file ${ENV_CLOUD} \
-	  --env-file env/cloud/.$(SERVICE).env \
-	  -f services/cloud/$(SERVICE)/compose.yml \
-	  logs -f
-
-cloud-service-ps: check-global check-cloud-service
-	$(DC) \
-	  --env-file ${ENV_GLOBAL} \
-	  --env-file ${ENV_CLOUD} \
-	  --env-file env/cloud/.$(SERVICE).env \
-	  -f services/cloud/$(SERVICE)/compose.yml \
-	  ps
