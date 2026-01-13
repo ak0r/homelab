@@ -5,11 +5,11 @@ name: ${GLOBAL_PROJECT_NAME}-cloud
 
 include:
   # Core infrastructure
-  # - path: services/cloud/tailscale/compose.yml
-  #   env_file:
-  #     - env/global.env
-  #     - env/cloud/.tailscale.env
-  #   project_directory: .
+  - path: services/cloud/tailscale/compose.yml
+    env_file:
+      - env/global.env
+      - env/cloud/.tailscale.env
+    project_directory: .
 
   - path: services/cloud/traefik/compose.yml
     env_file:
@@ -17,11 +17,11 @@ include:
       - env/cloud/.traefik.env
     project_directory: .
 
-  # - path: services/cloud/adguard/compose.yml
-  #   env_file:
-  #     - env/global.env
-  #     - env/cloud/.adguard.env
-  #   project_directory: .
+  - path: services/cloud/adguard/compose.yml
+    env_file:
+      - env/global.env
+      - env/cloud/.adguard.env
+    project_directory: .
 
   # Monitoring
   # - path: services/cloud/uptime-kuma/compose.yml
