@@ -6,9 +6,6 @@ services:
     security_opt:
       - no-new-privileges:true
     network_mode: host
-    ports:
-      - "80:80"
-      - "443:443"
     environment:
       - TZ=${TZ}
       - ACME_EMAIL=${ACME_EMAIL}
@@ -49,7 +46,6 @@ services:
       # Docker provider
       - --providers.docker.endpoint=unix:///var/run/docker.sock
       - --providers.docker.exposedByDefault=false
-      - --providers.docker.network=${SERVICE_NETWORK:-service}
       - --providers.docker.watch=true
 
       # File provider

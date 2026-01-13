@@ -1,7 +1,7 @@
 services:
   tailscale:
-    image: tailscale/tailscale:latest
-    container_name: tailscale-cloud
+    image: tailscale/tailscale:${SERVICE_VERSION:-latest}
+    container_name: ${SERVICE_NAME:-tailscale-cloud}
     hostname: ${TAILSCALE_HOSTNAME}
     restart: unless-stopped
     privileged: true
@@ -10,8 +10,10 @@ services:
       - TS_AUTHKEY=${TAILSCALE_AUTHKEY}
       - TS_STATE_DIR=/var/lib/tailscale
       - TS_USERSPACE=false
+      - TS_ACCEPT_DNS=false
+      - TS_EXTRA_ARGS=--accept-routes
     volumes:
-      - ${APP_DATA_ROOT}/tailscale/state:/var/lib/tailscale
+      - ${DATA_ROOT}/cloud/tailscale/state:/var/lib/tailscale
       - /dev/net/tun:/dev/net/tun
     cap_add:
       - NET_ADMIN

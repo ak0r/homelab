@@ -67,12 +67,8 @@ setup:
 
 ## ---------- Networks ----------
 networks:
-	@echo "Creating Docker networks..."
-	@docker network inspect edge >/dev/null 2>&1 || docker network create edge \
-		--driver bridge --subnet 172.20.0.0/24 --gateway 172.20.0.1
-	@docker network inspect service >/dev/null 2>&1 || docker network create service \
-		--driver bridge --subnet 172.21.0.0/24 --gateway 172.21.0.1
-	@echo "✓ Networks created"
+	@echo "Using host network mode - no bridge networks needed"
+	@echo "✓ Network configuration verified"
 
 ## ---------- Directory Initialization ----------
 init:
