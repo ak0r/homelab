@@ -5,12 +5,7 @@ services:
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true
-    networks:
-      - edge
-      - service
-    dns:
-      - 1.1.1.1
-      - 8.8.8.8
+    network_mode: host
     ports:
       - "80:80"
       - "443:443"
@@ -82,9 +77,3 @@ services:
       - traefik.http.routers.traefik-dashboard.tls.certresolver=cloudflare-dns
       - traefik.http.routers.traefik-dashboard.middlewares=traefik-auth
       - traefik.http.middlewares.traefik-auth.basicauth.users=${TRAEFIK_BASIC_AUTH}
-
-networks:
-  edge:
-    external: true
-  service:
-    external: true
