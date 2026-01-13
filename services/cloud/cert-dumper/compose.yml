@@ -3,7 +3,7 @@ services:
     image: ldez/traefik-certs-dumper:v2.8.3
     container_name: cert-dumper
     restart: unless-stopped
-    user: "${SERVICE_UID:-1001}:${SERVICE_GID:-1001}"
+    user: 1001:1001
     environment:
       - TZ=${TZ}
       - ACME_FILE_PATH=/traefik/acme.json
