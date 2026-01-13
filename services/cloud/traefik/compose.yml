@@ -73,3 +73,4 @@ services:
       - traefik.http.routers.traefik-dashboard.tls.certresolver=cloudflare-dns
       - traefik.http.routers.traefik-dashboard.middlewares=traefik-auth
       - traefik.http.middlewares.traefik-auth.basicauth.users=${TRAEFIK_BASIC_AUTH}
+      - traefik.http.services.traefik-dashboard.loadbalancer.server.port=8080
