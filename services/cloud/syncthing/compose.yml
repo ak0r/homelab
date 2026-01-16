@@ -18,4 +18,3 @@ services:
       - traefik.http.routers.syncthing.tls=true
       - traefik.http.routers.syncthing.tls.certresolver=cloudflare-dns
       - traefik.http.services.syncthing.loadbalancer.server.port=8384
-      - traefik.http.services.syncthing.loadbalancer.server.scheme=http
