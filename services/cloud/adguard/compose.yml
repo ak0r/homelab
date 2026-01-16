@@ -4,18 +4,18 @@ services:
     container_name: ${SERVICE_NAME:-adguard}
     restart: unless-stopped
     network_mode: host
-    # user: "${SERVICE_UID:-1001}:${SERVICE_GID:-1001}"
     environment:
       - TZ=${TZ}
     volumes:
       - ${SERVICE_DATA_PATH}/work:/opt/adguardhome/work
       - ${SERVICE_DATA_PATH}/conf:/opt/adguardhome/conf
-      - ${DATA_ROOT}/cloud/certs/adguard.cloud.offhourlab.dev:/opt/adguardhome/certs:ro
+      # - ${DATA_ROOT}/cloud/certs/adguard.cloud.offhourlab.dev:/opt/adguardhome/certs:ro
     labels:
       - traefik.enable=true
       - traefik.http.routers.adguard.rule=Host(`${SERVICE_FULL_DOMAIN}`)
       - traefik.http.routers.adguard.entrypoints=websecure
       - traefik.http.routers.adguard.tls=true
       - traefik.http.routers.adguard.tls.certresolver=cloudflare-dns
+      - traefik.http.routers.adguard.middlewares=security-headers
       - traefik.http.services.adguard.loadbalancer.server.port=3000
       - traefik.http.services.adguard.loadbalancer.server.scheme=http
