@@ -16,6 +16,6 @@ services:
       - traefik.http.routers.adguard.entrypoints=websecure
       - traefik.http.routers.adguard.tls=true
       - traefik.http.routers.adguard.tls.certresolver=cloudflare-dns
-      - traefik.http.routers.adguard.middlewares=security-headers
+      - traefik.http.routers.adguard.middlewares=security-headers@file
       - traefik.http.services.adguard.loadbalancer.server.port=3000
       - traefik.http.services.adguard.loadbalancer.server.scheme=http
