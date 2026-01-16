@@ -4,7 +4,6 @@ services:
     container_name: ${SERVICE_NAME:-syncthing}
     restart: unless-stopped
     network_mode: host
-    user: ${SERVICE_UID:-1000}:${SERVICE_GID:-1000}
     environment:
       - TZ=${TZ}
     volumes:
