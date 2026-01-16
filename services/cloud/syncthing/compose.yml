@@ -1,0 +1,20 @@
+services:
+  syncthing:
+    image: syncthing/syncthing:${SERVICE_VERSION:-latest}
+    container_name: ${SERVICE_NAME:-syncthing}
+    restart: unless-stopped
+    network_mode: host
+    user: ${SERVICE_UID:-1000}:${SERVICE_GID:-1000}
+    environment:
+      - TZ=${TZ}
+    volumes:
+      - ${SERVICE_DATA_PATH}/config:/var/syncthing/config
+      - ${SERVICE_DATA_PATH}/data:/var/syncthing/data
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.syncthing.rule=Host(`${SERVICE_FULL_DOMAIN}`)
+      - traefik.http.routers.syncthing.entrypoints=websecure
+      - traefik.http.routers.syncthing.tls=true
+      - traefik.http.routers.syncthing.tls.certresolver=cloudflare-dns
+      - traefik.http.services.syncthing.loadbalancer.server.port=8384
+      - traefik.http.services.syncthing.loadbalancer.server.scheme=http

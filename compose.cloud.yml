@@ -4,12 +4,6 @@
 name: ${GLOBAL_PROJECT_NAME}-cloud
 
 include:
-  # Core infrastructure
-  # - path: services/cloud/tailscale/compose.yml
-  #   env_file:
-  #     - env/global.env
-  #     - env/cloud/.tailscale.env
-  #   project_directory: .
 
   - path: services/cloud/traefik/compose.yml
     env_file:
@@ -22,11 +16,12 @@ include:
       - env/global.env
       - env/cloud/.adguard.env
     project_directory: .
-
-  # - path: services/cloud/cert-dumper/compose.yml
-  #   env_file:
-  #     - env/global.env
-  #   project_directory: .
+  
+  - path: services/cloud/syncthing/compose.yml
+    env_file:
+      - env/global.env
+      - env/cloud/.syncthing.env
+    project_directory: .
 
   # Monitoring
   # - path: services/cloud/uptime-kuma/compose.yml
