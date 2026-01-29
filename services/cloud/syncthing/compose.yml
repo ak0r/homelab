@@ -11,6 +11,7 @@ services:
     volumes:
       - ${SERVICE_DATA_PATH}/config:/var/syncthing/config
       - ${SERVICE_DATA_PATH}/data:/var/syncthing/data
+      - ${SHARED_USER_DATA_PATH}:/data:rw
     labels:
       - traefik.enable=true
       - traefik.http.routers.syncthing.rule=Host(`${SERVICE_FULL_DOMAIN}`)
